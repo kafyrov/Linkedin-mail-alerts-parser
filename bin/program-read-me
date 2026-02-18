@@ -1,0 +1,15 @@
+Q: What does this program do?  
+A: This program extracts job postings from saved LinkedIn job alert emails and converts them into a clean, organized CSV spreadsheet. It automatically removes duplicate jobs and extracts key details such as job title, company, location, and work type (Remote/Hybrid/On-site). 
+Q: How do I use this program?  
+A:  
+- Create the following folders on your C drive: `C:\SavedEmails\Linkedin-parser
+- Unzip, place the `.exe` file and the `.html` files you want to process into that folder. 
+- Double-click the `.exe` file to run the program
+- Windows SmartScreen may warn you that the app is unrecognized or potentially unsafe because it has no digital signature; choose the option to run it anyway.
+
+Q: Can I use a different folder structure?  
+A: No. The path `C:\SavedEmails\Linkedin-parser` is hardcoded in this version of the program. If you want to use a different path, download the source code and compile it yourself with your preferred folder configuration.
+Q: How do I prepare the data files?  
+A: The test setup used Thunderbird with the ImportExportTools NG plugin to save LinkedIn job alert emails as `.html` files, but you can use any method that produces compatible `.html` files. 
+Q: How can I see what the program is doing?  
+A: Run it using the supplied `.bat` file and review the generated log to monitor its progress and actions.
