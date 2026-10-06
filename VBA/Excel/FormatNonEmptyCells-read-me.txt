@@ -1,0 +1,8 @@
+Q: what this VB program do?
+
+A: This script processes the current Excel sheet and do 2 things:
+
+1.  Apply all borders to non-empty cells
+2. Make only non-empty cells in row 1 bold
+
+
