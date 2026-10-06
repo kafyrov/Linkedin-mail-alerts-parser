@@ -1,0 +1,4 @@
+Q: what this VB program do?
+
+A: This script processes all selected messages in Outlook and saves them to the default path `C:\SavedEmails\Linkedin-parser\` without relying on Word. You can change the folder location and name by editing the script.
+
