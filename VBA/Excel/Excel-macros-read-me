@@ -1,0 +1,10 @@
+Q: What ConvertNonemptyCellsTextURLsToHyperlinks VB program do?
+
+A: This script processes the current Excel sheet and converts all non-empty cells with text URLs into active links.
+
+Q: What FormatNonEmptyCells VB program do?
+
+A: This script processes the current Excel sheet and do 2 things:
+
+1.  Apply all borders to non-empty cells
+2. Make only non-empty cells in row 1 bold
