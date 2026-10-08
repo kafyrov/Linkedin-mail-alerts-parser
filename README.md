@@ -1,9 +1,15 @@
-# LinkedIn Job Parser - Documentation
+# LinkedIn Job Alert email Parser - Documentation
 
 ## Overview
 This Python script parses saved LinkedIn job alert emails (HTML format) and extracts job posting information into a structured CSV file. It's designed to help you organize and track job opportunities from multiple email alerts efficiently.
 
 Microsoft Outlook's "Save as HTML" feature is NOT compartible with this script!
+
+You can use VBA script provided at Companion VBA files section to generate .html files without relying on Word. 
+
+The test setup also used Thunderbird with the ImportExportTools NG plugin to save LinkedIn job alert emails as `.html` files
+
+
 
 ## Features
 
@@ -61,7 +67,7 @@ SOURCE_FOLDER = r'C:\SavedEmails\Linkedin-parser'
 ```
 
 **To change the folder:**
-- Edit line 10 in the script
+- Edit line 35 in the script
 - Use raw string (`r'...'`) or escape backslashes (`\\`)
 - Examples:
   ```python
@@ -92,9 +98,9 @@ Example: `linkedin_jobs_enhanced-list-2026-02-10.csv`
 2. Place all HTML files in the configured folder
 
 3. Run the script:
-   ```bash
-   python linkedin_parser.py
-   ```
+  
+   python linkedin_jobs_alerts-parser-with-day-stamp.py
+  
 
 4. Find the output CSV in the same directory where you ran the script
 
@@ -107,69 +113,46 @@ Columns added: Location, Work Type, Job ID
 
 ## Code Architecture
 
-### Main Components
+Code Architecture
 
-#### 1. `clean_linkedin_url(url)`
-**Purpose**: Cleans and standardizes LinkedIn URLs
+The linkedin_jobs_alerts-parser-with-day-stamp.py script is a batch-oriented HTML parser.
 
-**Process**:
-1. Decodes Outlook Safe Links wrapper
-2. Removes tracking parameters
-3. Extracts Job ID from URL path
-4. Returns clean URL and Job ID
+It reads saved LinkedIn job-alert emails from a configured folder, extracts structured job information, 
+removes duplicate postings, adds the date on which each job was extracted, and writes the results to a CSV file.
 
-**Example**:
-```python
-Input:  "https://na01.safelinks.protection.outlook.com/?url=https%3A%2F%2F..."
-Output: ("https://www.linkedin.com/comm/jobs/view/4359970532/", "4359970532")
-```
-
-#### 2. `parse_linkedin_files()`
-**Purpose**: Main processing function
+File handling, HTML parsing, URL normalization, duplicate detection, and CSV generation are separated by responsibility, while main() coordinates the complete workflow.
 
 **Workflow**:
-1. Validates source folder exists
-2. Finds all `.html` and `.htm` files
-3. For each file:
-   - Parses HTML with BeautifulSoup
-   - Finds job title links by CSS class
-   - Extracts company info from adjacent table row
-   - Parses location and work type
-   - Deduplicates by Job ID
-4. Writes results to CSV
 
-### HTML Structure Detection
+Read matching files from SOURCE_FOLDER
 
-The script identifies job postings using this pattern:
+Parse HTML with BeautifulSoup
 
-```html
-<tr>
-  <td class="pb-0">
-    <a class="font-bold text-md text-system-blue-50">Job Title</a>
-  </td>
-</tr>
-<tr>
-  <td class="pb-0">
-    <p>Company Name · Location (Remote)</p>
-  </td>
-</tr>
-```
+Find LinkedIn job-title links
 
-**Key CSS Classes**:
-- `text-system-blue-50`: LinkedIn's blue link color
-- `font-bold`: Bold text styling
-- `text-md`: Medium text size
+Clean URLs and extract Job IDs
 
-### Data Parsing Logic
+Extract company, location, and work type
 
-#### Company & Location Parsing
-```python
-"SOCi.ai · Toronto, ON (Remote)"
-↓
-company_name = "SOCi.ai"
-location = "Toronto, ON"
-work_type = "Remote"
-```
+Deduplicate by Job ID
+
+Add extraction date
+
+Write structured CSV output
+
+
+### Configuration and Constants
+
+The script begins with configuration values that control its input and output behavior:
+
+SOURCE_FOLDER identifies the directory containing saved email HTML files.
+
+FILE_PATTERN specifies which files should be processed, such as *.html.
+
+OUTPUT_FILE defines the generated CSV filename.
+
+CSV_FIELDS defines the order of the columns written to the output file.
+
 
 #### Work Type Detection
 - **Remote**: Contains `(Remote)` in location text
@@ -209,13 +192,12 @@ Infrastructure Engineer,Prelude,Canada,Remote,https://www.linkedin.com/comm/jobs
 
 ### How It Works
 1. Extracts Job ID from each LinkedIn URL
-2. Maintains a `seen_job_ids` set during processing
 3. Skips jobs with already-seen IDs
 
-### Benefits
-- Same job appearing in multiple emails is only listed once
-- Tracks uniqueness across all processed files in a single run
-- Job ID is more reliable than URL comparison
+The deduplication key is the LinkedIn Job ID rather than the
+complete URL, making the process more reliable when URLs contain different tracking
+parameters.
+
 
 ### Limitations
 - Deduplication only works within a single script execution
@@ -258,86 +240,6 @@ pip install beautifulsoup4
 - Add print statements to see what links are found
 - Inspect HTML structure manually
 
-### Debugging Tips
-
-#### Enable Verbose Output
-Add print statements to see what's being processed:
-```python
-for link in job_links:
-    title = link.get_text(strip=True)
-    print(f"Found title: {title}")  # Add this line
-```
-
-#### Test with One File
-Temporarily change the loop to process only the first file:
-```python
-for filename in files[:1]:  # Process only first file
-```
-
-## Customization Options
-
-### 1. Change CSV Delimiter
-To use semicolons instead of commas:
-```python
-writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
-```
-
-### 2. Add More Fields
-To extract salary information (if present):
-```python
-# In the parsing loop, add:
-salary = "Not specified"
-# Look for salary text in the HTML
-salary_tag = company_row.find(string=re.compile(r'\$[0-9]'))
-if salary_tag:
-    salary = salary_tag.strip()
-
-# Add to results dictionary
-'salary': salary,
-```
-
-### 3. Filter by Keywords
-To only extract jobs containing specific keywords:
-```python
-KEYWORDS = ['engineer', 'developer', 'administrator']
-
-# Before adding to results:
-if any(keyword.lower() in title.lower() for keyword in KEYWORDS):
-    results.append({...})
-```
-
-### 4. Change Date Format
-To use a different date format (e.g., DD/MM/YYYY):
-```python
-'extracted_date': datetime.now().strftime('%d/%m/%Y')
-```
-
-## Advanced Usage
-
-### Batch Processing Multiple Folders
-```python
-folders = [
-    r'C:\SavedEmails\Linkedin-January',
-    r'C:\SavedEmails\Linkedin-February'
-]
-
-for folder in folders:
-    SOURCE_FOLDER = folder
-    parse_linkedin_files()
-```
-
-### Merge Multiple CSV Files
-After running the script on different dates:
-```python
-import pandas as pd
-import glob
-
-csv_files = glob.glob('linkedin_jobs_enhanced-list-*.csv')
-df_list = [pd.read_csv(file) for file in csv_files]
-merged_df = pd.concat(df_list, ignore_index=True)
-merged_df.drop_duplicates(subset=['job_id'], inplace=True)
-merged_df.to_csv('all_jobs_merged.csv', index=False)
-```
 
 ## Limitations
 
@@ -352,8 +254,6 @@ merged_df.to_csv('all_jobs_merged.csv', index=False)
 1. **Regular Backups**: Keep original HTML files as backup
 2. **Consistent Naming**: Use consistent filenames for source HTML files
 3. **Periodic Updates**: Check if LinkedIn changes email format
-4. **Version Control**: Track script modifications if you customize it
-5. **Date Organization**: Run script regularly to keep dated CSV files organized
 
 ## Future Enhancement Ideas
 
@@ -370,17 +270,8 @@ merged_df.to_csv('all_jobs_merged.csv', index=False)
 
 This script is provided as-is for personal use. Feel free to modify and adapt it to your needs.
 
-**Disclaimer**: This tool is for personal job search organization only. Respect LinkedIn's Terms of Service and do not use for commercial scraping or automated access to LinkedIn's platform.
+**Disclaimer**: This tool is for personal job search organization only. 
+Respect LinkedIn's Terms of Service and do not use for commercial scraping or automated access to LinkedIn's platform.
 
-## Version History
 
-- **v1.0** (Initial): Basic extraction of title and URL
-- **v2.0** (Enhanced): Added company name extraction
-- **v3.0** (Pro Version): Added location, work type, deduplication, and date tracking
-
----
-
-**Created**: February 2026  
-**Python Version**: 3.6+  
-**Dependencies**: beautifulsoup4
 
